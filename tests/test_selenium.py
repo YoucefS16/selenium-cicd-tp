@@ -107,5 +107,70 @@ class TestCalculator:
             assert f"Résultat: {expected}" in result.text
             time.sleep(1)
 
+    def test_page_load_time(self, driver):
+        """Test 5: Mesurer le temps de chargement de la page"""
+        start_time = time.time()
+        file_path = os.path.abspath("../src/index.html")
+        driver.get(f"file://{file_path}")
+        # Attendre que la page soit complètement chargée
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "calculator"))
+        )
+        load_time = time.time() - start_time
+        print(f"Temps de chargement: {load_time:.2f} secondes")
+        # Vérifier que le chargement prend moins de 3 secondes
+        assert load_time < 3.0, f"Page trop lente à charger: {load_time:.2f}s"
+
+    def test_decimal_numbers(self, driver):
+        """Test 5.1: Test avec des nombres décimaux"""
+        file_path = os.path.abspath("../src/index.html")
+        driver.get(f"file://{file_path}")
+
+        driver.find_element(By.ID, "num1").clear()
+        driver.find_element(By.ID, "num1").send_keys("5.5")
+        driver.find_element(By.ID, "num2").clear()
+        driver.find_element(By.ID, "num2").send_keys("2.5")
+
+        select = Select(driver.find_element(By.ID, "operation"))
+        select.select_by_value("add")
+
+        driver.find_element(By.ID, "calculate").click()
+
+        result = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "result"))
+        )
+        assert "Résultat: 8" in result.text
+
+    def test_negative_numbers(self, driver):
+        """Test 5.1: Test avec des nombres négatifs"""
+        file_path = os.path.abspath("../src/index.html")
+        driver.get(f"file://{file_path}")
+
+        driver.find_element(By.ID, "num1").clear()
+        driver.find_element(By.ID, "num1").send_keys("-4")
+        driver.find_element(By.ID, "num2").clear()
+        driver.find_element(By.ID, "num2").send_keys("3")
+
+        select = Select(driver.find_element(By.ID, "operation"))
+        select.select_by_value("multiply")
+
+        driver.find_element(By.ID, "calculate").click()
+
+        result = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "result"))
+        )
+        assert "Résultat: -12" in result.text
+
+    def test_ui_properties(self, driver):
+        """Test 5.1: Test de l'interface utilisateur (couleurs, tailles)"""
+        file_path = os.path.abspath("../src/index.html")
+        driver.get(f"file://{file_path}")
+
+        container = driver.find_element(By.CLASS_NAME, "container")
+        result_div = driver.find_element(By.ID, "result")
+
+        assert container.value_of_css_property("max-width") == "400px"
+        assert result_div.value_of_css_property("background-color") == "rgba(240, 240, 240, 1)"
+
 if __name__ == "__main__":
     pytest.main(["-v", "--html=report.html", "--self-contained-html"])
